@@ -1,5 +1,7 @@
 # tf-atom-s3-bucket-cors-configuration-aws
 
+> Single-resource Terraform atom that configures Cross-Origin Resource Sharing (CORS) rules on an existing S3 bucket.
+
 [![CI](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws/actions/workflows/ci.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws/actions/workflows/ci.yml)
 [![Release](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws/actions/workflows/auto-release.yml/badge.svg)](https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws/actions/workflows/auto-release.yml)
 
@@ -43,9 +45,12 @@ Configures Cross-Origin Resource Sharing (CORS) rules for an S3 bucket. Allows w
 
 ```hcl
 module "bucket_cors" {
-  source = "github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws?ref=v1.0.0"
+  source = "git::https://github.com/PlatformStackPulse/tf-atom-s3-bucket-cors-configuration-aws.git?ref=v1.0.0"
 
-  context   = module.this.context
+  # tf-label context (namespace / stage / name ...) — required for id + tags
+  context = module.this.context
+
+  # Required: the id (name) of the bucket to attach the CORS config to
   bucket_id = module.bucket.bucket_id
 
   cors_rules = [{
@@ -116,3 +121,26 @@ module "bucket_cors" {
 | <a name="output_enabled"></a> [enabled](#output\_enabled) | Whether the module is enabled. |
 | <a name="output_id"></a> [id](#output\_id) | ID of the CORS configuration |
 <!-- END_TF_DOCS -->
+
+## Tests
+
+Unit tests live in `tests/unit/` and run against a mocked AWS provider (no
+credentials or real resources required). They assert only on plan-known values —
+module enablement, resource count, and the CORS rule inputs that flow through the
+dynamic block — never on the computed `id` (unknown under a mock provider).
+
+```bash
+make test-unit
+# or directly:
+terraform init -backend=false
+terraform test -test-directory=tests/unit
+```
+
+Integration tests (if present under `tests/integration/`) provision real AWS
+resources and require credentials:
+
+```bash
+make test-integration
+# or:
+terraform test -test-directory=tests/integration
+```
